@@ -1,1 +1,1 @@
-web: python web_app/flash_portal.py
+web: gunicorn app:app
