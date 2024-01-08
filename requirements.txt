@@ -10,3 +10,5 @@ jieba==0.42.1
 networkx==2.8.8
 scipy==1.11.4
 textrank4zh==0.3
+#for web portal
+flask==3.0.0
