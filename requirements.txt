@@ -1,5 +1,5 @@
 #commonly used packages
-numpy==1==26.3 
+numpy==1.26.3 
 pandas==2.1.4
 #for crawling
 requests==2.31.0
@@ -9,5 +9,4 @@ bs4==0.0.1
 jieba==0.42.1
 networkx==2.8.8
 scipy==1.11.4
-networkx==3.0.0
 textrank4zh==0.3
