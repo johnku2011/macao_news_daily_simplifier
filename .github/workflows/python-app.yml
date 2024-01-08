@@ -31,3 +31,15 @@ jobs:
 
       - name: Run Python application
         run: python main.py
+
+      - name: Git Commit
+        run: |
+          git config --local user.email "johnku2011@github.com"
+          git config --local user.name "John Ku"
+          git add .
+          git commit -m "Automatic commit from GitHub Actions"
+      
+      - name: Git Push
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
