@@ -1,0 +1,32 @@
+name: Scheduled Running 
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Run every day at 3 PM (UTC time is 7 AM)
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Create and activate virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install make
+        run: sudo apt-get install make
+
+      - name: Install project dependencies
+        run: make install
+
+      - name: Run Python application
+        run: python main.py
