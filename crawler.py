@@ -5,7 +5,7 @@ Created on Tue Aug 29 17:36:52 2023
 @author: John.Ku
 """
 
-from functions import extract_title_and_contents,chinese_summarization,preprocess_text
+from helper_functions.functions import extract_title_and_contents,chinese_summarization,preprocess_text
 import datetime
 import warnings
 import requests

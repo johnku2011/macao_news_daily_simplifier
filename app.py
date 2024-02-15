@@ -14,7 +14,7 @@ import re
 from urllib.parse import unquote
 
 def get_csv_files():
-    return glob.glob('../data/*.csv')
+    return glob.glob('./data/*.csv')
 
 def read_csv(file_path):
     return pd.read_csv(file_path)
@@ -81,5 +81,6 @@ def regex_replace(s, pattern, repl):
 
 
 if __name__ == '__main__':
+    app.debug = True
     app.run()
 
