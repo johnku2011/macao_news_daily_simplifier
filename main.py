@@ -23,6 +23,7 @@ current_date = datetime.date.today()
 
 formatted_date = current_date.strftime("%Y-%m/%d/")
 export_date = current_date.strftime("%Y%m%d")
+db_date = datetime.datetime.today().strftime("%Y-%m-%d")
 
 print(formatted_date)
 
@@ -81,6 +82,55 @@ df['Preprocessed_Content'] = df['Content'].apply(preprocess_text)
 
 # Concatenate all the content into a single string
 combined_text = ' '.join(df['Preprocessed_Content'])
+df['Date'] = db_date
 
+#Export to CSV
 df.to_csv("./data/" + export_date + "_output.csv", index=False, encoding="utf-8-sig")
 
+#Export to Mongo DB
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+import os
+
+db_pw = os.environ.get('DB_PW')
+
+uri = "mongodb+srv://github_connection_news:"+db_pw+"@hkawscluster.akjpa5w.mongodb.net/?retryWrites=true&w=majority"
+
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+# Access the database
+db = client.macaoNewsDB
+
+# Access the collection
+collection = db.macao_news
+
+# Filter documents by the "Date" column equal to db_date
+query = {"Date": db_date}
+result = collection.find(query)
+
+# Get the count of deleted documents
+count = len(list(result))
+
+#Delete all documents that match the query and Check if any documents were deleted 
+if count > 0:
+    collection.delete_many(query)
+    print(f"{count} documents deleted successfully.")
+else:
+    print("No documents found with the given date.")
+
+# Convert the DataFrame to a list of dictionaries
+documents = df.to_dict(orient="records")
+
+# Insert the list of dictionaries into the collection
+collection.insert_many(documents)
+
+# Close the connection to MongoDB
+client.close()

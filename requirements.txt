@@ -12,3 +12,5 @@ scipy==1.11.4
 textrank4zh==0.3
 #for web portal
 flask==3.0.0
+dnspython==2.5.0
+pymongo==4.6.1
