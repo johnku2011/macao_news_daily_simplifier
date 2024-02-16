@@ -93,6 +93,7 @@ from pymongo.server_api import ServerApi
 import os
 
 db_pw = os.environ.get('DB_PW')
+print(db_pw)
 
 uri = "mongodb+srv://github_connection_news:"+db_pw+"@hkawscluster.akjpa5w.mongodb.net/?retryWrites=true&w=majority"
 
