@@ -29,8 +29,13 @@ jobs:
       - name: Install project dependencies
         run: make install
 
+      - name: Export DB_PW secret
+        run: echo "$DB_PW" > service_account.json
+
       - name: Run Python application
         run: python crawler.py
+        env:
+          DB_PW: ${{ secrets.DB_PW }}
 
       - name: Git Commit and Push
         run: |
