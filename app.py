@@ -5,13 +5,14 @@ Created on Tue Aug 29 17:36:52 2023
 @author: John.Ku
 """
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 import glob
 
 import pandas as pd
 import datetime
 import re
 from urllib.parse import unquote
+import os
 
 def get_csv_files():
     return glob.glob('./data/*.csv')
@@ -42,6 +43,11 @@ files = get_csv_files()
 app = Flask(__name__)
 
 # Route for the home page
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 @app.route('/')
 def index():
     

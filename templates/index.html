@@ -1,93 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>Macao News</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新聞網站</title>
     <link rel="stylesheet" type="text/css" href="./static/styles.css"">
 </head>
 <body>
-    <h1>News</h1>
-    <div class="navbar">
+    <header>
+        <h1>JK 新聞網站</h1>
+    </header>
+    <div class="month-filter">
+      <select id="monthSelector">
+          <!-- Options will be dynamically populated -->
+      </select>
+    </div>
+
+    <nav class="date-nav" id="dateNav">
         {% for file in files %}
-        {% set date = file|regex_replace('.*?(\d{8}).*', '\\1') %}
-        {% set selected_file_date = selected_file|regex_replace('.*?(\d{8}).*', '\\1') %}
-        {% set filename = file.split('/')[-1] %}  {# Extract the filename from the path #}
-        <a href="/{{ filename }}"
-           {% if date == selected_file_date %} class="active" {% endif %}>
-            {{ date  }}
-        </a>
+            {% set date = file|regex_replace('.*?(\d{8}).*', '\\1') %}
+            {% set filename = file.split('/')[-1] %}
+            <a href="/{{ filename }}" data-date="{{ date }}" {% if date == selected_file|regex_replace('.*?(\d{8}).*', '\\1') %}class="active"{% endif %}>
+                {{ date|regex_replace('(\d{4})(\d{2})(\d{2})', '\\1-\\2-\\3') }}
+            </a>
         {% endfor %}
+    </nav>
+
+    <div class="container">
+        <div class="news-grid">
+            {% for record in data %}
+            <div class="news-card">
+                <div class="news-content">
+                    <h2 class="news-title">{{ record['Title'] }}</h2>
+                    <p class="news-summary">{{ record['Summary'] }}</p>
+                    <div class="news-full">{{ record['Content'] }}</div>
+                    <button class="copy-btn" onclick="copyNews(this)">複製</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-    <div class="card-container">
-          {% for record in data %}
-          <div class="card">
-            <h3>{{ record['Title'] }}</h3>
-            <p class="summary">{{ record['Summary'] }}</p>
-            <p class="content">{{ record['Content'] }}</p>
-            <button onclick="copyText({{ loop.index }})">Copy</button>
-          </div>
-          {% endfor %}
-    </div>
-     <button id="goToTopBtn">Go to Top</button>
+
+    <button id="goToTopBtn" title="回到頂部">↑</button>
+
+    <script>
+        function copyNews(button) {
+            const card = button.closest('.news-card');
+            const title = card.querySelector('.news-title').innerText;
+            const summary = card.querySelector('.news-summary').innerText;
+            const content = card.querySelector('.news-full').innerText;
+            const text = `${title}\n\n${summary}\n\n${content}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('新聞已複製到剪貼簿！');
+            }).catch(err => {
+                console.error('複製失敗:', err);
+            });
+        }
+
+        document.querySelectorAll('.news-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('copy-btn')) {
+                    this.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // Go to Top Button functionality
+        const goToTopBtn = document.getElementById("goToTopBtn");
+
+        window.onscroll = function() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                goToTopBtn.style.display = "block";
+            } else {
+                goToTopBtn.style.display = "none";
+            }
+        };
+
+        goToTopBtn.onclick = function() {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        };
+
+
+        function populateMonthSelector() {
+            var select = document.getElementById('monthSelector');
+            if (!select) {
+                console.error('Month selector not found');
+                return;
+            }
+            var currentDate = new Date();
+            var currentYear = currentDate.getFullYear();
+            var currentMonth = currentDate.getMonth();
+
+            for (var i = 0; i < 12; i++) {
+                var date = new Date(currentYear, i, 0);
+                var option = document.createElement('option');
+                option.value = date.toISOString().slice(0, 7); // YYYY-MM format
+                option.text = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                select.appendChild(option);
+
+                if (i === currentMonth) {
+                    option.selected = true;
+                }
+            }
+        }
+
+        function sortDateLinks() {
+            var dateNav = document.getElementById('dateNav');
+            if (!dateNav) {
+                console.error('Date navigation container not found');
+                return;
+            }
+
+            var dateLinks = Array.from(dateNav.querySelectorAll('a'));
+            dateLinks.sort((a, b) => {
+                return b.getAttribute('data-date').localeCompare(a.getAttribute('data-date'));
+            });
+
+            // Clear existing links and append sorted links
+            dateNav.innerHTML = '';
+            dateLinks.forEach(link => dateNav.appendChild(link));
+        }
+
+        function filterDates() {
+            var monthSelector = document.getElementById('monthSelector');
+            var dateNav = document.getElementById('dateNav');
+            
+            if (!monthSelector || !dateNav) {
+                console.error('Required elements not found');
+                return;
+            }
+
+            var selectedMonth = monthSelector.value;
+            var [year, month] = selectedMonth.split('-');
+            
+            var dateLinks = dateNav.querySelectorAll('a');
+            var visibleDates = 0;
+            dateLinks.forEach(function(link) {
+                var linkDate = link.getAttribute('data-date');
+                if (linkDate && linkDate.startsWith(year + month)) {
+                    link.style.display = '';
+                    visibleDates++;
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+
+            // Show a message if no dates are available for the selected month
+            var noDateMessage = document.getElementById('noDateMessage');
+            if (visibleDates === 0) {
+                if (!noDateMessage) {
+                    noDateMessage = document.createElement('p');
+                    noDateMessage.id = 'noDateMessage';
+                    noDateMessage.textContent = '選擇的月份沒有可用的日期。';
+                    dateNav.appendChild(noDateMessage);
+                } else {
+                    noDateMessage.style.display = 'block';
+                }
+            } else if (noDateMessage) {
+                noDateMessage.style.display = 'none';
+            }
+
+            console.log('Filtered dates for ' + selectedMonth + '. Visible dates: ' + visibleDates);
+        }
+
+        function initializeNewsApp() {
+            populateMonthSelector();
+            sortDateLinks(); // Sort dates before initial filtering
+            filterDates(); // Initial filtering
+
+            var monthSelector = document.getElementById('monthSelector');
+            if (monthSelector) {
+                monthSelector.addEventListener('change', function() {
+                    console.log('Month changed to: ' + this.value);
+                    filterDates(); // Call filterDates when the month changes
+                });
+            } else {
+                console.error('Month selector not found');
+            }
+        }
+
+        // Wait for the DOM to be fully loaded before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeNewsApp);
+        } else {
+            initializeNewsApp();
+        }
+
+
+
+    </script>
 </body>
-<script>
-  window.onscroll = function() {
-    scrollFunction();
-  };
-
-  function scrollFunction() {
-    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-      document.getElementById('goToTopBtn').style.display = 'block';
-    } else {
-      document.getElementById('goToTopBtn').style.display = 'none';
-    }
-  }
-
-  document.getElementById('goToTopBtn').addEventListener('click', function() {
-    document.body.scrollTop = 0; // For Safari
-    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
-  });
-  
-  const cards = document.querySelectorAll('.card');
-
-  cards.forEach(card => {
-    let isTextSelected = false;
-
-    card.addEventListener('mousedown', () => {
-      isTextSelected = false;
-    });
-
-    card.addEventListener('mousemove', () => {
-      if (window.getSelection().toString().length > 0) {
-        isTextSelected = true;
-      }
-    });
-
-    card.addEventListener('mouseup', () => {
-      if (!isTextSelected) {
-        card.classList.toggle('active');
-      }
-    });
-  });
-  
-function copyText(index) {
-  var summaryElement = document.getElementsByClassName("summary")[index-1];
-  var contentElement = document.getElementsByClassName("content")[index-1];
-  
-  // Create a temporary textarea element
-  var tempTextArea = document.createElement("textarea");
-  tempTextArea.value = "Summary: " + summaryElement.textContent + "\n" + "Content: " + contentElement.textContent;
-  document.body.appendChild(tempTextArea);
-  
-  // Select and copy the text
-  tempTextArea.select();
-  document.execCommand("copy");
-  
-  // Remove the temporary textarea from the document
-  document.body.removeChild(tempTextArea);
-  
-  // Show a success message
-  alert("Text copied to clipboard!");
-}  
-  
-</script>
 </html>
